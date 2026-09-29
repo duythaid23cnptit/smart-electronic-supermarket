@@ -12,13 +12,17 @@
 - Initialized a local Git repository.
 - Used `main` as the working branch.
 - Added `.gitignore` for backend/frontend generated files.
-- No fake commit was created.
+- Verified the existing student commit `8026553 chore: initialize POS fullstack skeleton`.
+- No commit was created, amended or rewritten during this update.
 
 ### Backend
+- Configured Java 26 and Spring Boot 4.1.1.
+- Added the official Maven Wrapper 3.3.4 configured for Maven 3.9.16.
 - Created Spring Boot application entry point.
 - Created `common`, `pos`, and `serialimei` package boundaries.
 - Created Controller -> Service structure for POS and Serial/IMEI status endpoints.
 - Added a health endpoint.
+- Added one application-context startup test.
 - Avoided persistence and business rules that were not specified.
 
 ### Frontend
@@ -37,13 +41,12 @@ Use `git status --short` as the authoritative list before submission.
 ```bash
 # Frontend
 cd frontend
-npm install
 npm run build
 
-# Backend (requires Maven)
+# Backend on Windows (system Maven is not required)
 cd ../backend
-mvn test
-mvn spring-boot:run
+.\mvnw.cmd clean test
+.\mvnw.cmd spring-boot:run
 ```
 
 ## 5. Week 2 Definition of Done
@@ -54,12 +57,15 @@ mvn spring-boot:run
 - [x] POS feature boundary created.
 - [x] Serial/IMEI feature boundary created.
 - [x] README created.
-- [ ] Backend build evidence captured on developer machine.
-- [ ] Frontend build evidence captured.
-- [ ] Backend running screenshot/log captured.
-- [ ] Frontend screenshot captured.
-- [ ] API response evidence captured.
-- [ ] Real student commit hash recorded.
+- [x] Java 26 and Spring Boot 4.1.1 configured.
+- [x] Maven Wrapper configured for Maven 3.9.16.
+- [x] Backend build and test evidence captured.
+- [x] Frontend build evidence captured.
+- [x] Backend startup log captured.
+- [x] Frontend browser verification completed.
+- [x] API response evidence captured.
+- [x] Frontend UI-to-backend interaction verified for POS and Serial/IMEI.
+- [x] Existing student commit hash recorded.
 - [ ] Reviewer/PR evidence recorded if used by the team.
 
 ## 6. Not claimed as complete
