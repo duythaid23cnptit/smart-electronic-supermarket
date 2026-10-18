@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => {
         input: {
           main: `${projectRoot}index.html`,
           qrPoc: `${projectRoot}qr-poc.html`,
+          inventory: `${projectRoot}inventory.html`,
         },
       },
     },
