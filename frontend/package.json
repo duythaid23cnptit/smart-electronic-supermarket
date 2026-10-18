@@ -5,16 +5,28 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:qr": "vite --host 0.0.0.0 --open /qr-poc.html",
+    "dev:qr:https": "vite --host 0.0.0.0 --mode qr-https --open /qr-poc.html",
+    "dev:inventory": "vite --host 0.0.0.0 --open /inventory.html",
+    "dev:inventory:https": "vite --host 0.0.0.0 --mode qr-https --open /inventory.html",
     "build": "vite build",
+    "test": "node --test src/poc/qr-scanner/scanUtils.test.js src/features/inventory/inventoryUtils.test.js",
+    "test:qr": "node --test src/poc/qr-scanner/scanUtils.test.js",
+    "generate:qr-samples": "node scripts/generate-qr-samples.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@zxing/browser": "^0.1.5",
+    "@zxing/library": "^0.21.3",
     "axios": "^1.7.7",
+    "html5-qrcode": "^2.3.8",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@vitejs/plugin-basic-ssl": "^1.2.0",
     "@vitejs/plugin-react": "^4.3.3",
+    "qrcode": "^1.5.4",
     "vite": "^5.4.10"
   }
 }

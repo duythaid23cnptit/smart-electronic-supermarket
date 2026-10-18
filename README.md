@@ -144,3 +144,41 @@ git diff
 ## Evidence
 
 See `docs/TV4_WEEK2_REPORT.md` and `docs/EVIDENCE_CHECKLIST.md`.
+
+## QR Scanner PoC (TV4 - W1)
+
+The isolated mobile QR scanner experiment is available at `/qr-poc.html` and does not
+change the existing POS or backend APIs.
+
+```powershell
+cd frontend
+npm run generate:qr-samples
+npm run test:qr
+npm run dev:qr:https
+```
+
+See `docs/qr-poc/README.md` for mobile HTTPS setup, test cases and the rule for recording
+only measurements observed on a real phone.
+
+## Inventory QR Receiving Demo (TV4 - Week 3)
+
+Week 3 adds an isolated inventory receiving page and Spring Boot REST API without changing
+the existing POS endpoints. Run the backend with the file-based H2 demo profile:
+
+```powershell
+cd backend
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=demo"
+```
+
+In another terminal:
+
+```powershell
+cd frontend
+npm run dev:inventory
+```
+
+Open `http://localhost:5173/inventory.html`. For a phone camera test, use
+`npm run dev:inventory:https` or a trusted HTTPS tunnel. Demo purchase orders are
+`PO-DEMO-APPROVED` and `PO-DEMO-DRAFT`.
+
+See `docs/inventory-qr/README.md` for API, test and handoff details.
