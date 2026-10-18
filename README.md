@@ -144,3 +144,18 @@ git diff
 ## Evidence
 
 See `docs/TV4_WEEK2_REPORT.md` and `docs/EVIDENCE_CHECKLIST.md`.
+
+## QR Scanner PoC (TV4 - W1)
+
+The isolated mobile QR scanner experiment is available at `/qr-poc.html` and does not
+change the existing POS or backend APIs.
+
+```powershell
+cd frontend
+npm run generate:qr-samples
+npm run test:qr
+npm run dev:qr:https
+```
+
+See `docs/qr-poc/README.md` for mobile HTTPS setup, test cases and the rule for recording
+only measurements observed on a real phone.
