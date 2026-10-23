@@ -1,0 +1,5 @@
+Date,Environment,Measurement,Scenario,n,Mean_ms,Median_ms,P95_ms,Min_ms,Max_ms,Fail_count,Conclusion
+2026-10-23,"Windows desktop; Chrome headless; real system clock",IMAGE_FILE_DECODE,"01-leading-zeroes.png; same browser session; 20 sequential html5-qrcode scanFile calls",20,86.3,17.3,29.1,13.5,1380.9,0,"p95 below 1000 ms; one 1380.9 ms outlier means the under-1-second target was not met consistently"
+2026-10-23,"Windows desktop; Chrome headless; real system clock",IMAGE_FILE_DECODE,"File-input flow with 01-leading-zeroes.png",1,54.3,54.3,54.3,54.3,54.3,0,"Decoded exact value 00001234567890 and populated Serial/IMEI"
+2026-10-23,"Windows desktop; Chrome headless; Vite proxy; Spring Boot demo; H2 file DB",API_REQUEST_MS,"Create one DEFECTIVE unit through the Inventory UI",1,208.5,208.5,208.5,208.5,208.5,0,"HTTP 201 UI success; available 0; defective 1"
+2026-10-23,"Windows desktop; no webcam evidence",CAMERA_SCAN_LATENCY,"Camera scan",0,,,,,,0,"NOT RUN"

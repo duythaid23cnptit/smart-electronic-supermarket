@@ -3,7 +3,7 @@ import { BrowserQRCodeReader } from '@zxing/browser'
 import { NotFoundException } from '@zxing/library'
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
 import { QR_SAMPLES } from './qrSamples.js'
-import { createDuplicateGuard, isWebUrl, requireExactText } from './scanUtils.js'
+import { createDuplicateGuard, createOperationGuard, isWebUrl, requireExactText } from './scanUtils.js'
 import { describeCameraError } from './cameraErrors.js'
 
 const LIBRARIES = {
@@ -23,8 +23,12 @@ export default function QrScannerPoc() {
   const zxingControlsRef = useRef(null)
   const videoRef = useRef(null)
   const duplicateGuardRef = useRef(createDuplicateGuard())
+  const scannerOperationRef = useRef(createOperationGuard())
+  const cameraStartedAtRef = useRef(null)
+  const mountedRef = useRef(true)
 
   const acceptDecodedValue = useCallback((value, source) => {
+    if (!mountedRef.current) return
     const exactValue = requireExactText(value)
 
     if (!duplicateGuardRef.current.accept(exactValue)) {
@@ -32,15 +36,20 @@ export default function QrScannerPoc() {
       return
     }
 
+    const cameraLatencyMs = cameraStartedAtRef.current === null
+      ? null
+      : performance.now() - cameraStartedAtRef.current
+    cameraStartedAtRef.current = null
     setResult({
       value: exactValue,
       source,
       capturedAt: new Date().toISOString(),
+      cameraLatencyMs,
     })
     setError('')
   }, [])
 
-  const stopScanner = useCallback(async () => {
+  const stopScanner = useCallback(async (updateState = true) => {
     zxingControlsRef.current?.stop()
     zxingControlsRef.current = null
 
@@ -63,17 +72,21 @@ export default function QrScannerPoc() {
       videoRef.current.srcObject = null
     }
 
-    setCameraState('STOPPED')
+    cameraStartedAtRef.current = null
+    scannerOperationRef.current.finish('camera')
+    if (updateState && mountedRef.current) setCameraState('STOPPED')
   }, [])
 
   const startScanner = useCallback(async () => {
-    await stopScanner()
+    await stopScanner(false)
+    if (!scannerOperationRef.current.tryStart('camera')) return
     setError('')
     setCameraState('REQUESTING_PERMISSION')
 
     if (!navigator.mediaDevices?.getUserMedia) {
       setCameraState('ERROR')
       setError('Trình duyệt không hỗ trợ camera API hoặc trang chưa chạy trong secure context.')
+      scannerOperationRef.current.finish('camera')
       return
     }
 
@@ -84,6 +97,7 @@ export default function QrScannerPoc() {
           verbose: false,
         })
         html5ScannerRef.current = scanner
+        cameraStartedAtRef.current = performance.now()
         await scanner.start(
           { facingMode: 'environment' },
           { fps: 10, qrbox: { width: 250, height: 250 } },
@@ -95,6 +109,7 @@ export default function QrScannerPoc() {
           delayBetweenScanAttempts: 100,
           delayBetweenScanSuccess: 500,
         })
+        cameraStartedAtRef.current = performance.now()
         zxingControlsRef.current = await reader.decodeFromConstraints(
           { video: { facingMode: { ideal: 'environment' } }, audio: false },
           videoRef.current,
@@ -110,13 +125,19 @@ export default function QrScannerPoc() {
 
       setCameraState('SCANNING')
     } catch (cameraError) {
+      cameraStartedAtRef.current = null
+      scannerOperationRef.current.finish('camera')
       setCameraState('ERROR')
       setError(describeCameraError(cameraError))
     }
   }, [acceptDecodedValue, library, stopScanner])
 
-  useEffect(() => () => {
-    void stopScanner()
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      void stopScanner(false)
+    }
   }, [stopScanner])
 
   async function changeLibrary(event) {
@@ -178,7 +199,7 @@ export default function QrScannerPoc() {
         </label>
 
         <div className="button-row">
-          <button className="primary-button" type="button" onClick={startScanner}>
+          <button className="primary-button" type="button" onClick={startScanner} disabled={cameraState === 'REQUESTING_PERMISSION' || cameraState === 'SCANNING'}>
             Bật camera
           </button>
           <button className="secondary-button" type="button" onClick={stopScanner}>
@@ -215,6 +236,7 @@ export default function QrScannerPoc() {
               <div><dt>Nguồn</dt><dd>{result.source}</dd></div>
               <div><dt>Độ dài</dt><dd>{result.value.length} ký tự</dd></div>
               <div><dt>Callback trùng đã chặn</dt><dd>{duplicateCount}</dd></div>
+              <div><dt>CAMERA_SCAN_LATENCY</dt><dd>{result.cameraLatencyMs === null ? 'NOT RUN' : `${result.cameraLatencyMs.toFixed(1)} ms`}</dd></div>
             </dl>
             <textarea className="result-value" value={result.value} readOnly rows="4" />
             {isWebUrl(result.value) && (

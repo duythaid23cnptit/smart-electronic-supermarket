@@ -1,5 +1,9 @@
 # Module Inventory QR Code Source - TV4 Week 3
 
+> Week 4 RC1 evidence and limitations are recorded in
+> [`W4_RELEASE_RC1.md`](./W4_RELEASE_RC1.md). RC1 adds browser-local PNG/JPG QR decoding,
+> scanner lifecycle guards and separate image/API timing without changing the backend contract.
+
 ## Scope
 
 This source adds inventory receiving to the existing React/Vite and Spring Boot application.
@@ -79,7 +83,7 @@ the regular `npm run dev:inventory` server.
 
 1. Load `PO-DEMO-APPROVED`.
 2. Select a SKU.
-3. Start the camera or enter the Serial/IMEI manually.
+3. Start the camera, choose a PNG/JPG QR image (maximum 5 MB), or enter the Serial/IMEI manually.
 4. Verify the displayed string character-for-character, especially leading zeroes.
 5. Select GOOD or DEFECTIVE and add the item.
 6. Review all rows and create the Goods Receipt.
