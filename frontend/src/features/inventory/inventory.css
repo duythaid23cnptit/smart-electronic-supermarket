@@ -38,9 +38,18 @@ input:focus, select:focus, button:focus-visible { outline: 3px solid #fbbf24; ou
 .camera-actions small { color: #94a3b8; }
 .button-muted { color: #e2e8f0; background: #243349; }
 .button-danger { min-height: 38px; color: #fecaca; background: #491d25; }
+.file-button { display: inline-flex; min-height: 46px; align-items: center; justify-content: center; border-radius: 12px; padding: 11px 16px; color: #06101d; background: #38bdf8; cursor: pointer; }
+.file-button input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.file-button:focus-within { outline: 3px solid #fbbf24; outline-offset: 2px; }
+.file-button:has(input:disabled) { cursor: not-allowed; opacity: .55; }
+.scanner-help { margin: -4px 0 14px; color: #94a3b8; font-size: 14px; }
 .inventory-reader { overflow: hidden; border: 1px dashed #475569; border-radius: 16px; background: #020617; }
 .inventory-reader:empty { display: none; }
 .inventory-reader video { max-height: 460px; object-fit: cover; }
+.measurement-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+.measurement-grid span, .benchmark-panel span { padding: 10px 12px; border-radius: 10px; color: #bfdbfe; background: #07111f; font: 600 13px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; }
+.benchmark-panel { display: flex; gap: 12px; align-items: center; margin-top: 12px; }
+.benchmark-panel span { flex: 1; }
 .item-form { display: grid; grid-template-columns: 1fr 2fr 1.3fr auto; gap: 12px; align-items: end; margin-top: 18px; }
 .unit-list { display: grid; gap: 10px; margin-bottom: 18px; }
 .unit-list article { display: flex; justify-content: space-between; gap: 14px; align-items: center; padding: 14px; border: 1px solid #2a3c54; border-radius: 13px; background: #07111f; }
@@ -55,6 +64,8 @@ input:focus, select:focus, button:focus-visible { outline: 3px solid #fbbf24; ou
   .serial-field { grid-column: 1 / -1; grid-row: 1; }
   .item-form button { grid-column: 1 / -1; }
   .receipt-result { grid-template-columns: 1fr 1fr; }
+  .measurement-grid { grid-template-columns: 1fr; }
+  .benchmark-panel { align-items: stretch; flex-direction: column; }
 }
 
 @media (max-width: 480px) {
