@@ -315,8 +315,8 @@ export default function InventoryReceivingPage() {
   return (
     <main className="inventory-page">
       <header className="inventory-hero">
-        <p className="inventory-kicker">SASMS · TV4 · WEEK 4 RC1</p>
-        <h1>Inventory QR Receiving</h1>
+        <p className="inventory-kicker">SASMS · MODULE 1 · W6 DEMO</p>
+        <h1>Module 1 — Kho QR Code &amp; Serial/IMEI</h1>
         <p>Nhập kho theo purchase order đã duyệt. Serial/IMEI luôn được giữ dưới dạng chuỗi.</p>
       </header>
       {message && <div className={`notice ${message.type}`} role="status">{message.text}</div>}

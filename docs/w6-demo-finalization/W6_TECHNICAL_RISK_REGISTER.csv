@@ -1,0 +1,12 @@
+ID,Risk,Probability,Impact,Current control,Owner review required,Disposition
+R-01,"H2 file and ddl-auto=update are demo-only; enum migration is H2/profile-specific",Medium,High,"Pre-W5 backup; demo-only migration; no DB reset",Architect/DBA,"Design reviewed migration tool before non-demo use"
+R-02,"Demo PO is now fully received and cannot support another new receiving run",High,Medium,"Recorded receipts/sales remain; API correctly blocks over-limit",PM/BA/QA,"Provide controlled approved PO/demo-data procedure; do not reset casually"
+R-03,"Product prices are isolated demo configuration rather than approved economics",High,High,"Server resolves price; client cannot override",BA/PM,"Approve price tax discount and rounding rules"
+R-04,"Payment is DEMO_CASH only; no reservation cancellation return or financial settlement",Certain,High,"UI and receipt label simulation clearly",PM/BA/Architect,"Approve POS state machine before expansion"
+R-05,"FR-06 FR-11 FR-12 are only partially covered; FRS revision 2 is not yet confirmed as approved baseline",High,High,"Trace created from docs/ba-input/FRS_V2 (1)).docx; gaps remain NOT VERIFIED",PM/BA/QA,"Approve baseline, review traceability gaps and execute UAT"
+R-06,"Physical webcam path has no executed evidence",Medium,Medium,"Manual input and local PNG/JPG decode available",QA,"Run on approved webcam/HTTPS environment"
+R-07,"QR decode is not consistently below one second",Medium,Medium,"Measured n=20 and recorded full distribution",QA/Architect,"Define performance environment and acceptance threshold"
+R-08,"npm audit has 3 high and 1 moderate findings",High,High,"No unreviewed major upgrade; production build passes",Architect/Security/PM,"Review non-breaking fixes and Vite migration separately"
+R-09,"No authentication or authorization on inventory/POS endpoints",High,High,"Demo is local PC only",Architect/PM,"Required before shared or production deployment"
+R-10,"Legacy skeleton status metadata can confuse non-demo consumers",Medium,Low,"Final UI no longer renders the legacy status panel",Architect/PM,"Approve API response/version cleanup in a separate change"
+R-11,"No repeatable automated browser E2E suite",Medium,Medium,"Repository/service tests and recorded manual Chrome demo",QA/PM,"Approve Playwright/Cypress only if project scope requires it"
