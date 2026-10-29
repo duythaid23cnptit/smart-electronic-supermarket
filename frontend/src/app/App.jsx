@@ -5,10 +5,10 @@ export default function App() {
   return (
     <main className="app-shell">
       <header className="hero">
-        <p className="eyebrow">SMART ELECTRONIC SUPERMARKET</p>
+        <p className="eyebrow">SASMS · MODULE 2 · W6 DEMO</p>
         <h1>Module 2 — POS bán hàng tại quầy</h1>
         <p>
-          Week 5 desktop demo kết nối trực tiếp ProductUnit của Module Kho.
+          Bản demo cuối kết nối trực tiếp ProductUnit của Module 1 — Kho.
           Thanh toán chỉ là xác nhận tiền mặt mô phỏng.
         </p>
       </header>

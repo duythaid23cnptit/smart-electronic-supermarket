@@ -1,5 +1,16 @@
 # Smart Electronic Supermarket — TV4 delivery workspace
 
+## Current demo scope
+
+The final TV4 demo is intentionally limited to two parts:
+
+1. **Module 1 — Kho QR Code & Serial/IMEI** (`/inventory.html`).
+2. **Module 2 — POS bán hàng tại quầy** (`/`).
+
+The Week 2 naming below is retained as historical assignment evidence; it is
+not the current module numbering. See `docs/w6-demo-finalization/` for the W6
+audit, test evidence, risks, demo guide and handover package.
+
 ## Week 2 baseline (historical)
 
 **Role:** TV4 — Fullstack Developer  

@@ -127,7 +127,7 @@ export default function PosPage() {
     <section className="pos-panel">
       <div className="section-heading">
         <div>
-          <p className="eyebrow">TV4 · W5 · DESKTOP DEMO</p>
+          <p className="eyebrow">TV4 · W6 · DESKTOP DEMO</p>
           <h2>POS – Bán hàng tại quầy</h2>
           <p className="pos-subtitle">
             Sản phẩm và Serial/IMEI lấy trực tiếp từ Module Kho. Chỉ xác nhận tiền mặt mô phỏng.

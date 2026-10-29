@@ -3,7 +3,7 @@ export default function SerialImeiPanel() {
     <section>
       <div className="section-heading">
         <div>
-          <p className="eyebrow">W5 · KẾT NỐI MODULE KHO</p>
+          <p className="eyebrow">W6 · KẾT NỐI MODULE 1 — KHO</p>
           <h2>Serial / IMEI trong luồng POS</h2>
         </div>
       </div>
