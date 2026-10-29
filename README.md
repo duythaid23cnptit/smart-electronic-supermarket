@@ -1,12 +1,15 @@
-# Smart Electronic Supermarket — TV4 Week 2
+# Smart Electronic Supermarket — TV4 delivery workspace
 
-## Assignment
+## Week 2 baseline (historical)
 
 **Role:** TV4 — Fullstack Developer  
 **Week 2 task:** Initialize the Git repository and build the React/Spring Boot project skeleton for **Module 1 — POS**.  
 **Deliverable:** Source Code Skeleton Module 1.
 
-This repository intentionally implements only the technical skeleton required for Week 2. It does **not** claim that the POS business workflow is complete.
+The following section records the original Week 2 baseline. Later sections
+describe the additive QR, inventory and W5 POS demo work. The repository still
+does **not** claim that the full supermarket or approved POS business workflow
+is complete.
 
 ## Scope implemented
 
@@ -20,7 +23,7 @@ This repository intentionally implements only the technical skeleton required fo
 - Axios API layer.
 - Documentation and evidence checklist.
 
-## Explicitly not implemented
+## Explicitly not implemented in the Week 2 baseline
 
 - Final POS sales workflow.
 - Payment processing.
@@ -182,3 +185,26 @@ Open `http://localhost:5173/inventory.html`. For a phone camera test, use
 `PO-DEMO-APPROVED` and `PO-DEMO-DRAFT`.
 
 See `docs/inventory-qr/README.md` for API, test and handoff details.
+
+## POS checkout demo (TV4 - Week 5)
+
+Week 5 connects the POS page to the real W3/W4 `Product` and `ProductUnit`
+records. Only `GOOD` + `AVAILABLE` units can be selected. A successful
+`DEMO_CASH` checkout stores the sale and receipt and changes the same unit to
+`SOLD` in one database transaction.
+
+```powershell
+cd backend
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=demo"
+
+# In another terminal
+cd frontend
+npm run dev
+```
+
+Open `http://localhost:5173`. Demo prices live only in
+`application-demo.properties`; BA/PM approval is still required before these
+values or this simulated payment flow can be used outside the demo.
+
+See `docs/pos-w5/README.md` and `docs/pos-w5/W5_RELEASE_REPORT.md` for the API,
+PC demo procedure, actual test evidence and outstanding approvals.

@@ -1,38 +1,22 @@
-import { useState } from 'react'
-import { getSerialImeiStatus } from './serialImeiApi.js'
-import StatusCard from '../../shared/components/StatusCard.jsx'
-
 export default function SerialImeiPanel() {
-  const [data, setData] = useState(null)
-  const [error, setError] = useState('')
-
-  async function checkBackend() {
-    try {
-      setError('')
-      setData(await getSerialImeiStatus())
-    } catch {
-      setData(null)
-      setError('Không kết nối được Backend Serial/IMEI.')
-    }
-  }
-
   return (
     <section>
       <div className="section-heading">
         <div>
-          <p className="eyebrow">BOUNDARY</p>
-          <h2>Serial / IMEI</h2>
+          <p className="eyebrow">W5 · KẾT NỐI MODULE KHO</p>
+          <h2>Serial / IMEI trong luồng POS</h2>
         </div>
-        <button onClick={checkBackend}>Kiểm tra Backend</button>
       </div>
 
       <p>
-        Tuần 2 chỉ dựng ranh giới chức năng. Quy tắc kiểm tra, vòng đời và lưu trữ
-        Serial/IMEI sẽ được triển khai khi có đặc tả nghiệp vụ được xác nhận.
+        POS đọc ProductUnit thật từ Module 1 — Kho QR/Serial-IMEI. Chỉ thiết bị
+        GOOD và AVAILABLE được chọn; checkout thành công chuyển đúng thiết bị
+        sang SOLD trong cùng transaction và giữ nguyên chuỗi Serial/IMEI.
       </p>
-
-      {data && <StatusCard title={data.module} status={data.status} note={data.note} />}
-      {error && <p className="error">{error}</p>}
+      <p>
+        Thanh toán hiện là DEMO_CASH. Các quy tắc giữ hàng, hoàn/đổi và vòng đời
+        sau bán vẫn cần đặc tả được BA/PM/Architect phê duyệt.
+      </p>
     </section>
   )
 }
