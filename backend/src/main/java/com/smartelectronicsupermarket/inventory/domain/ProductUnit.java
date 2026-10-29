@@ -39,6 +39,9 @@ public class ProductUnit {
     @Column(name = "inventory_status", nullable = false, length = 20)
     private InventoryStatus inventoryStatus;
 
+    @Column(name = "sold_sale_number", length = 64)
+    private String soldSaleNumber;
+
     protected ProductUnit() {}
 
     public ProductUnit(String serialImei, Product product, Warehouse warehouse, UnitCondition condition) {
@@ -55,4 +58,16 @@ public class ProductUnit {
     public Warehouse getWarehouse() { return warehouse; }
     public UnitCondition getCondition() { return condition; }
     public InventoryStatus getInventoryStatus() { return inventoryStatus; }
+    public String getSoldSaleNumber() { return soldSaleNumber; }
+
+    public void markSold(String saleNumber) {
+        if (condition != UnitCondition.GOOD || inventoryStatus != InventoryStatus.AVAILABLE) {
+            throw new IllegalStateException("ProductUnit is not sellable.");
+        }
+        if (saleNumber == null || saleNumber.isBlank() || saleNumber.length() > 64) {
+            throw new IllegalArgumentException("Sale number is required.");
+        }
+        inventoryStatus = InventoryStatus.SOLD;
+        soldSaleNumber = saleNumber;
+    }
 }

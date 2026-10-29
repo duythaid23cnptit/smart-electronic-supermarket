@@ -10,7 +10,7 @@
     "dev:inventory": "vite --host 0.0.0.0 --open /inventory.html",
     "dev:inventory:https": "vite --host 0.0.0.0 --mode qr-https --open /inventory.html",
     "build": "vite build",
-    "test": "node --test src/poc/qr-scanner/scanUtils.test.js src/features/inventory/inventoryUtils.test.js",
+    "test": "node --test src/poc/qr-scanner/scanUtils.test.js src/features/inventory/inventoryUtils.test.js src/features/pos/posCheckoutUtils.test.js",
     "test:qr": "node --test src/poc/qr-scanner/scanUtils.test.js",
     "generate:qr-samples": "node scripts/generate-qr-samples.mjs",
     "preview": "vite preview"

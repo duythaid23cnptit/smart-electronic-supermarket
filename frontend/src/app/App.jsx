@@ -6,10 +6,10 @@ export default function App() {
     <main className="app-shell">
       <header className="hero">
         <p className="eyebrow">SMART ELECTRONIC SUPERMARKET</p>
-        <h1>Module 1 — POS Source Code Skeleton</h1>
+        <h1>Module 2 — POS bán hàng tại quầy</h1>
         <p>
-          Week 2 foundation: React frontend + Spring Boot backend. Business rules are
-          intentionally excluded until requirements are approved.
+          Week 5 desktop demo kết nối trực tiếp ProductUnit của Module Kho.
+          Thanh toán chỉ là xác nhận tiền mặt mô phỏng.
         </p>
       </header>
 
