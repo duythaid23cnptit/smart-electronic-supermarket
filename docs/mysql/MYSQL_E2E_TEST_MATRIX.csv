@@ -1,0 +1,24 @@
+Test ID,Area,Expected,Actual,HTTP status,Status,Evidence
+MYSQL-001,Startup,"Backend mysql profile starts on 8082 and uses sasms_tv4_test","PID 3984 uses mysql profile; prepared fixture read correctly; DATABASE() confirmed sasms_tv4_test",200 + SELECT,PASS,MYSQL_TEST_REPORT.md + MYSQL_SELECT_EVIDENCE.md
+MYSQL-002,Health,"GET /api/health returns UP","status=UP",200,PASS,MYSQL-final-get-results.json
+MYSQL-003,Product,"GET /api/pos/products reads two seeded products","PHONE-DEMO and TV-55-DEMO returned with configured prices",200,PASS,MYSQL-final-get-results.json
+MYSQL-004,Purchase Order,"APPROVED and DRAFT POs return expected lines","APPROVED TV 3 and phone 2; DRAFT TV 1",200,PASS,MYSQL-INV-browser-state.json
+MYSQL-005,Goods Receipt,"GOOD and DEFECTIVE units persist atomically","GR-ebd97d44-ec58-44d1-8c13-ab3d16ee94c3; available=1 defective=1",201,PASS,MYSQL-INV-browser-state.json
+MYSQL-006,POS visibility,"GOOD appears as AVAILABLE; DEFECTIVE is excluded","Only 000020261106MYSQL01 was sellable",200,PASS,MYSQL-INV-api-results.json
+MYSQL-007,Duplicate Serial,"Existing Serial/IMEI is rejected without new receipt","Conflict: Serial/IMEI already exists; PO unchanged",409,PASS,MYSQL-INV-api-results.json
+MYSQL-008,PO limit,"Quantity over approved remaining amount is rejected","Conflict: quantity exceeds approved amount; PO unchanged",409,PASS,MYSQL-INV-api-results.json
+MYSQL-009,DRAFT PO,"Receiving against DRAFT PO is rejected","Conflict: PO is not approved; DRAFT received remains 0",409,PASS,MYSQL-INV-api-results.json
+MYSQL-010,Receipt idempotency,"Exact replay returns same receipt and does not add stock","Same receipt; replayed=true; PO received remains 2",200,PASS,MYSQL-INV-api-results.json
+MYSQL-011,POS checkout,"One DEMO_CASH checkout creates one sale receipt","POS-f58295fc-053a-4f1e-9cc0-6408a20e6fef created exactly once",201,PASS,MYSQL-POS-browser-state.json
+MYSQL-012,Receipt values,"Receipt contains exact SKU Serial price and 15000000 VND total","DEMO_CASH DEMO_CONFIRMED; exact TV SKU and GOOD Serial; total 15000000",200,PASS,MYSQL-final-get-results.json
+MYSQL-013,Available decrement,"Available count decreases after checkout","TV available changed from 1 to 0",200,PASS,MYSQL-final-get-results.json
+MYSQL-014,SOLD protection,"A sold Serial is no longer sellable","Sellable units endpoint returned []; direct product_units SELECT confirmed SOLD and matching sale number",200 + SELECT,PASS,MYSQL-final-get-results.json + MYSQL_SELECT_EVIDENCE.md
+MYSQL-015,Direct SELECT aggregate,"All requested tables plus DATABASE() and VERSION() are verified with SELECT","All seven requested tables confirmed; DATABASE()=sasms_tv4_test; VERSION()=8.0.43",SELECT,PASS,MYSQL_SELECT_EVIDENCE.md
+MYSQL-015A,SELECT product_units,"GOOD is SOLD with matching sale; DEFECTIVE remains DEFECTIVE","Exact states and sale reference confirmed in Workbench",SELECT,PASS,MYSQL_SELECT_EVIDENCE.md
+MYSQL-015B,SELECT pos_sales,"Expected sale payment status and total are stored","DEMO_CASH DEMO_CONFIRMED and 15000000 VND confirmed in Workbench",SELECT,PASS,MYSQL_SELECT_EVIDENCE.md
+MYSQL-015C,SELECT pos_sale_items,"Expected SKU Serial and unit price are stored","Expected SKU Serial 000020261106MYSQL01 and 15000000 VND confirmed",SELECT,PASS,MYSQL_SELECT_EVIDENCE.md
+MYSQL-015D,SELECT purchase_orders,"Expected PO headers are stored","Direct Workbench SELECT confirmed the table and E2E records",SELECT,PASS,MYSQL_SELECT_EVIDENCE.md
+MYSQL-015E,SELECT purchase_order_lines,"Received quantities are stored","Direct Workbench SELECT confirmed the table and E2E records",SELECT,PASS,MYSQL_SELECT_EVIDENCE.md
+MYSQL-015F,SELECT goods_receipts,"Expected receipt and idempotency key are stored","Direct Workbench SELECT confirmed the table and E2E receipt",SELECT,PASS,MYSQL_SELECT_EVIDENCE.md
+MYSQL-015G,SELECT goods_receipt_items,"Receipt contains both expected product units","Direct Workbench SELECT confirmed the receipt item records",SELECT,PASS,MYSQL_SELECT_EVIDENCE.md
+MYSQL-015H,SELECT DATABASE and VERSION,"Database is sasms_tv4_test and server version is captured","DATABASE()=sasms_tv4_test; VERSION()=8.0.43",SELECT,PASS,MYSQL_SELECT_EVIDENCE.md
