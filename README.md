@@ -11,6 +11,54 @@ The Week 2 naming below is retained as historical assignment evidence; it is
 not the current module numbering. See `docs/w6-demo-finalization/` for the W6
 audit, test evidence, risks, demo guide and handover package.
 
+## Current UI V3 and persistence options
+
+UI/UX V3 is implemented for the same two TV4 modules without adding new
+business scope. The routes remain:
+
+- Inventory QR/Serial-IMEI: `http://localhost:5173/inventory.html`.
+- Counter POS: `http://localhost:5173/`.
+
+The existing H2 `demo` and `test` profiles remain the default persistence
+options for local development and automated tests. Start the H2 demo backend
+on port 8080 with:
+
+```powershell
+cd backend
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=demo"
+```
+
+MySQL 8 is an explicit opt-in profile for the implemented Inventory/POS
+subset. Credentials and the JDBC URL must be supplied through environment
+variables; they are not stored in Git. A MySQL backend can be started on port
+8082 with:
+
+```powershell
+$env:SASMS_MYSQL_URL = 'jdbc:mysql://127.0.0.1:3306/sasms_tv4_test?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8'
+$env:SASMS_MYSQL_USERNAME = '<dedicated-sasms-user>'
+$env:SASMS_MYSQL_PASSWORD = '<password>'
+$env:SASMS_MYSQL_SERVER_PORT = '8082'
+cd backend
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=mysql"
+```
+
+For an isolated frontend on port 5175, use the Vite inline proxy command in
+[`docs/mysql/README.md`](docs/mysql/README.md), which sends `/api` only to the
+MySQL backend on port 8082.
+
+Database roles are intentionally distinct:
+
+- `sasms_tv4_test` is the database verified by TV4 E2E and direct Workbench
+  SELECT evidence. The current `demo-data.sql` explicitly loads this database.
+- `sasms_tv4_demo` is the default JDBC target in the opt-in MySQL profile when
+  `SASMS_MYSQL_URL` is omitted. Its seed state has not been verified by the
+  recorded E2E evidence, so set the JDBC URL explicitly and do not assume the
+  test fixture was loaded there.
+
+The MySQL implementation contains nine tables for Inventory and counter POS
+only. It does not claim completion of Customer, AI, ecommerce, delivery,
+warranty, real payment/VietQR or other SASMS modules.
+
 ## Week 2 baseline (historical)
 
 **Role:** TV4 — Fullstack Developer  
