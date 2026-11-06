@@ -1,0 +1,23 @@
+ID,Layer,Scenario,Expected,Observed on 2026-10-29,Status,Evidence
+W5-BE-01,Backend,List real inventory,"Only GOOD + AVAILABLE ProductUnit rows",Defective excluded and available rows returned,PASS,PosCheckoutIntegrationTests.listsRealProductsAndOnlyGoodAvailableUnits
+W5-BE-02,Backend,Successful checkout with 000020261029POS02,"Persist sale and mark unit SOLD atomically",Repository reads SOLD and the generated soldSaleNumber link,PASS,PosCheckoutIntegrationTests.checkoutPersistsReceiptAndMarksProductUnitSoldAtomically
+W5-BE-03,Backend,Exact retry,"One sale and same receipt",Same sale returned with replay true,PASS,PosCheckoutIntegrationTests.exactIdempotentRetryReturnsSameReceiptWithoutSecondSale
+W5-BE-04,Backend,Reused key with different cart,Reject conflict,Rejected and second unit stayed AVAILABLE,PASS,PosCheckoutIntegrationTests.reusedIdempotencyKeyWithDifferentCartIsRejected
+W5-BE-05,Backend,Sold or defective unit,Reject sale,Both cases rejected,PASS,PosCheckoutIntegrationTests.soldAndDefectiveUnitsCannotBeSold
+W5-BE-06,Backend,Invalid line in multi-line cart,Rollback entire checkout,No sale and valid unit stayed AVAILABLE,PASS,PosCheckoutIntegrationTests.anyInvalidLineRollsBackWholeCheckout
+W5-BE-07,Backend,Two cashiers same serial,Exactly one succeeds,One success and one rejection,PASS,PosCheckoutIntegrationTests.concurrentCashiersCannotSellSameSerialTwice
+W5-BE-08,Backend,Price arithmetic and validation,"Overflow-safe total; invalid input rejected",Five pricing tests passed,PASS,PosPricingTests
+W5-REG-01,Backend,W1-W4 regression,All Maven tests pass,"20 tests; 0 failures; 0 errors; 0 skipped",PASS,"Maven test run before final clean verify"
+W5-FE-01,Frontend,Cart utility regression,QR + inventory + POS utility suites pass,13 of 13 tests passed,PASS,npm test
+W5-FE-02,Frontend,Production bundle,Vite build succeeds,355 modules transformed,PASS,npm run build after removing obsolete skeleton UI imports
+W5-E2E-01,API + H2,"Receive GOOD leading-zero serial then sell",Receipt stored for 000020261029W5GOOD at VND 5000000,PASS,Live demo-profile API run
+W5-E2E-02,API + H2,DEFECTIVE exclusion,Defective unit absent from POS,000020261029W5DEF not returned by POS units,PASS,Live demo-profile API run
+W5-E2E-03,API + H2,Exact retry,Same sale returned and no duplicate,Replay true for POS-35c7f260-5fbf-473d-b2f0-1843860cb4f5,PASS,Live demo-profile API run
+W5-E2E-04,API + H2,Sell same serial with another key,HTTP 409,HTTP 409 observed,PASS,Live demo-profile API run
+W5-E2E-05,API + H2,Restart persistence,Receipt remains and sold unit stays unavailable,Receipt read after backend restart; available count 0,PASS,Live demo-profile API run
+W5-UI-01,Browser,Interactive PC checkout,Receipt visible in browser,"Student reports Chrome Windows PASS: GR-7e86369d-5658-4dcd-84af-fed3e0318efb -> POS-1c4b42f3-d75d-4fe9-9a28-1bc3d9907a2c; VND 15000000",PASS,"User-supplied manual verification; screenshot file not supplied"
+W5-UI-02,Live API,Backend receipt lookup,GET receipt matches completed UI sale,"Sale; serial; VND 15000000; DEMO_CASH and DEMO_CONFIRMED all matched",PASS,Independent GET of POS-1c4b42f3-d75d-4fe9-9a28-1bc3d9907a2c
+W5-E2E-06,API + H2,TV sold unit absent from sellable units,000020261029POS02 is not returned,SerialStillSellable false,PASS,Independent GET of TV-55-DEMO units
+W5-E2E-07,Live API,Resell 000020261029POS02 with a new idempotency key,HTTP 409,"HTTP 409; unit no longer available",PASS,Independent request with pos-w5-resale-verify-20261029-01
+W5-H2-01,Live H2,Direct SQL read of exact SOLD column,Read SOLD and sale link without changing data,Live backend held the embedded H2 file lock,NOT RUN,"Repository integration test covers SOLD/link; no DB reset or process stop"
+W5-SEC-01,Dependencies,npm audit,No known vulnerability,"4 vulnerabilities: 3 high and 1 moderate",FAIL,"follow-redirects and source-map-js fixes available without force; full esbuild fix requires breaking Vite 8 upgrade"

@@ -1,0 +1,26 @@
+export const QR_SAMPLES = [
+  {
+    id: 'leading-zeroes',
+    fileName: '01-leading-zeroes.png',
+    label: 'Chuỗi có số 0 đầu',
+    value: '00001234567890',
+  },
+  {
+    id: 'sasms-code',
+    fileName: '02-sasms-code.png',
+    label: 'Mã PoC SASMS',
+    value: 'SASMS-TV4-W1-QR-001',
+  },
+  {
+    id: 'unicode',
+    fileName: '03-unicode-vietnamese.png',
+    label: 'Chuỗi Unicode tiếng Việt',
+    value: 'SASMS|Ghi chú: Kiểm thử QR tiếng Việt',
+  },
+  {
+    id: 'safe-url-display',
+    fileName: '04-url-display-only.png',
+    label: 'URL chỉ hiển thị, không tự mở',
+    value: 'https://example.com/qr-test?code=000123',
+  },
+]

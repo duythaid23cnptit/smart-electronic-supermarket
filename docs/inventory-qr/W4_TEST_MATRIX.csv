@@ -1,0 +1,11 @@
+Area,Scenario,Command or method,Expected,Actual,Status
+Frontend unit,"Exact strings; duplicate callback; operation lock; duration statistics; image validation; duplicate receipt item","npm.cmd test","All tests pass","9 tests; 9 pass; 0 fail",PASS
+Frontend build,"Vite production bundle","npm.cmd run build","Build completes","355 modules transformed; build completed",PASS
+Backend regression,"Approved receipt; duplicate Serial; leading zero; DRAFT; over-limit; DEFECTIVE; retry; concurrent retry",".\\mvnw.cmd clean verify","All tests pass","8 tests; 8 pass; 0 failures; 0 errors; 0 skipped; BUILD SUCCESS",PASS
+Image file UI,"Select PNG sample with leading zeroes","Chrome desktop file-input flow","Exact string populated","00001234567890; IMAGE_FILE_DECODE 54.3 ms",PASS
+Image benchmark,"Decode the same sample 20 times","Inventory UI benchmark","Report statistics and failures","20 correct; fail 0; p95 29.1 ms; max 1380.9 ms",PASS_WITH_LIMITATION
+UI to API to H2,"Create DEFECTIVE unit 000020261023W4RC1","Chrome desktop + Vite proxy + demo backend","One receipt; not available","HTTP success; available 0; defective 1; API_REQUEST_MS 208.5 ms",PASS
+Duplicate submit,"Invoke create receipt twice in one browser tick","Chrome desktop resource timing","One POST only","1 /api/inventory/goods-receipts request",PASS
+Camera,"Physical webcam scan and CAMERA_SCAN_LATENCY","Not run","Evidence required","No webcam evidence collected",NOT_RUN
+Mobile,"Phone HTTPS camera scan","Out of W4 test environment","Desktop only","Not executed",NOT_RUN
+Dependency audit,"Known npm advisories","npm.cmd audit --json","Record actual findings; do not auto-upgrade major","4 vulnerabilities: 3 high and 1 moderate; Vite major upgrade offered",FINDINGS_RECORDED

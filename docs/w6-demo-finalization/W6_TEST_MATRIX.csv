@@ -1,0 +1,28 @@
+ID,Area,Scenario,Expected,Actual,Status,Evidence
+W6-GIT-01,Git,W6 branch and W1-W5 ancestry,"W6 at W5 3798d83 with continuous history","Branch feat/tv4-w6-demo-finalization at 3798d83; W1-W5 commits present",PASS,"git branch -vv; git log"
+W6-BE-01,Backend,Full Maven regression,All tests pass,"20 tests; 0 failures; 0 errors; 0 skipped; BUILD SUCCESS",PASS,"mvnw.cmd clean verify on 2026-10-29"
+W6-INV-01,Inventory,Approved PO with GOOD and DEFECTIVE,"Receipt accepted; only GOOD available","Repository test passed; GOOD available=1; DEFECTIVE status retained",PASS,InventoryReceivingServiceTests.receivesApprovedOrderAndKeepsDefectiveUnitOutOfAvailableStock
+W6-INV-02,Inventory,Serial unique globally,Reject existing serial,"HTTP 409 for 000020261029W5GOOD",PASS,"Live API plus rejectsDuplicateSerialAcrossReceipts"
+W6-INV-03,Inventory,Leading-zero Serial,Preserve exact string,"000020261029W6FLOW01 preserved through receipt and POS",PASS,"Live GR/units/sale plus preservesLeadingZeroesInSerialImei"
+W6-INV-04,Inventory,Unapproved PO,Reject receipt,"HTTP 409 for PO-DEMO-DRAFT",PASS,"Live API plus rejectsUnapprovedPurchaseOrder"
+W6-INV-05,Inventory,Quantity above approved,Reject without stock,"HTTP 409 before and after remaining quantity reached zero",PASS,"Live API plus rejectsQuantityAboveApprovedAmount"
+W6-INV-06,Inventory,Exact idempotent retry,"Same receipt; no second stock unit","HTTP 201 then 200; same GR-e5ccc299-087b-4aa8-844b-a1ba27bbb1cf; replayed true",PASS,"Live API plus replaysRepeatedRequestWithoutCreatingMoreStock"
+W6-INV-07,Inventory,Concurrent retry,One logical receipt,"Repository count remains one",PASS,InventoryReceivingServiceTests.serializesConcurrentRepeatedRequest
+W6-QR-01,QR,Exact text duplicate callback and URL safety,Unit tests pass,"5 scanner tests passed",PASS,npm test
+W6-QR-02,QR,PNG/JPG validation,Valid images accepted and bad files rejected,"4 Inventory frontend tests include type size empty checks",PASS,npm test
+W6-QR-03,QR,Physical webcam scan,Camera evidence collected,"No webcam run in W6 or W4",NOT RUN,W4 camera evidence n=0
+W6-QR-04,QR,Decode consistently below 1000 ms,Every consistent run below target,"W4 n=20 p95=29.1 ms but max=1380.9 ms",FAIL,docs/inventory-qr/W4_PERF_MEASUREMENTS.csv
+W6-POS-01,POS,List real Kho products and units,Only GOOD AVAILABLE units,"Repository integration test passed; W6 unit appeared before sale",PASS,PosCheckoutIntegrationTests.listsRealProductsAndOnlyGoodAvailableUnits
+W6-POS-02,POS,Cart and client validation,Valid cart total and duplicate restrictions,"4 POS frontend utility tests passed",PASS,npm test
+W6-POS-03,POS,Server-authoritative price,Ignore client price and use configured server price,"PHONE-DEMO sale total 5000000; pricing tests 5/5",PASS,"Live sale plus PosPricingTests"
+W6-POS-04,POS,DEMO_CASH receipt,"201 sale and readable receipt","POS-51430c55-5697-4ae2-996d-415f4a0819dc; DEMO_CONFIRMED; GET 200",PASS,Live API
+W6-POS-05,POS,Atomic SOLD transition,Sale and unit transition in one transaction,"Unit absent from sellable list after sale; repository SOLD/link assertion passed",PASS,"Live API plus checkoutPersistsReceiptAndMarksProductUnitSoldAtomically"
+W6-POS-06,POS,Resell same serial with new key,Reject duplicate sale,"HTTP 409 for 000020261029W6FLOW01",PASS,Live API
+W6-POS-07,POS,Exact idempotent retry,Same sale and no duplicate,"HTTP 201 then 200; same sale; replay true",PASS,"Live API plus exactIdempotentRetryReturnsSameReceiptWithoutSecondSale"
+W6-POS-08,POS,Rollback mixed valid/invalid cart,No sale and valid unit remains available,"Repository integration test passed",PASS,PosCheckoutIntegrationTests.anyInvalidLineRollsBackWholeCheckout
+W6-POS-09,POS,Concurrent cashiers same serial,Exactly one success,"One success and one rejection; sale count one",PASS,PosCheckoutIntegrationTests.concurrentCashiersCannotSellSameSerialTwice
+W6-FE-01,Frontend,All frontend tests,All pass,"13 tests; 13 pass; 0 fail",PASS,npm test
+W6-FE-02,Frontend,Vite production build,Build completes,"355 modules transformed",PASS,npm run build
+W6-UI-01,UI,Module numbering,"Kho=Module 1; POS=Module 2","Labels corrected; build passed",PASS,"InventoryReceivingPage.jsx; App.jsx"
+W6-SEC-01,Dependencies,npm security audit,No known findings,"Exit 1; 4 findings: 3 high and 1 moderate",FAIL,npm audit on 2026-10-29
+W6-REQ-01,Requirements,Trace FR-06 FR-11 FR-12 to Huy FRS,Authoritative file readable,"Read docs/ba-input/FRS_V2 (1)).docx revision 2 and mapped code/tests/evidence; all three FRs have unresolved criteria",PARTIAL,W6_REQUIREMENTS_TRACEABILITY.md

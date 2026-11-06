@@ -1,69 +1,96 @@
 :root {
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #172033;
-  background: #f5f7fb;
+  font-family: "Segoe UI", Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+  color: #17253d;
+  background: #eaf1fa;
 }
 
 * { box-sizing: border-box; }
-body { margin: 0; }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #eaf1fa;
+}
+
+button,
+input,
+select { font: inherit; }
+
 button { cursor: pointer; }
 
 .app-shell {
-  width: min(1120px, calc(100% - 32px));
+  --sasms-color-primary: #0f766e;
+  --sasms-color-primary-strong: #0b5f59;
+  --sasms-color-primary-soft: #ddf3ee;
+  width: min(1374px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 40px 0 64px;
+  padding: 20px 0 56px;
 }
 
-.hero, section {
-  background: white;
-  border: 1px solid #e6eaf0;
-  border-radius: 16px;
-  padding: 28px;
-  margin-bottom: 20px;
-  box-shadow: 0 8px 30px rgba(23, 32, 51, 0.06);
-}
-
-.hero h1, .section-heading h2 { margin: 6px 0 10px; }
-.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; margin: 0; }
-
-.section-heading {
+.pos-hero {
   display: flex;
   justify-content: space-between;
-  gap: 20px;
+  gap: 24px;
   align-items: center;
+  margin: 20px 0 18px;
 }
 
-button {
-  border: 0;
-  border-radius: 10px;
-  padding: 10px 14px;
-  font-weight: 600;
+.pos-hero__title {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  min-width: 0;
 }
 
-.placeholder-grid {
+.pos-hero__icon {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-top: 20px;
+  flex: 0 0 54px;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border-radius: 14px;
+  color: var(--sasms-color-primary);
+  background: #ddf3ee;
+  font-size: 25px;
 }
 
-.placeholder {
-  border: 1px dashed #b7c0cf;
-  border-radius: 12px;
-  padding: 24px 16px;
-  min-height: 100px;
+.pos-hero .eyebrow {
+  margin: 0 0 5px;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .1em;
 }
 
-.status-card {
-  margin-top: 18px;
-  border: 1px solid #d7dce4;
-  border-radius: 12px;
-  padding: 16px;
+.pos-hero h1 {
+  margin: 0 0 5px;
+  font-size: clamp(26px, 3vw, 30px);
+  line-height: 1.17;
+  letter-spacing: -.025em;
 }
 
-.error { margin-top: 14px; font-weight: 600; }
+.pos-hero p:last-child {
+  margin: 0;
+  color: var(--sasms-color-text-muted);
+  font-size: 13px;
+}
 
-@media (max-width: 760px) {
-  .section-heading { align-items: flex-start; flex-direction: column; }
-  .placeholder-grid { grid-template-columns: 1fr; }
+.pos-hero__badge {
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: #0b5f59;
+  background: #ddf3ee;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+@media (max-width: 660px) {
+  .app-shell { width: min(100% - 20px, 1374px); padding-bottom: 28px; }
+  .pos-hero { align-items: flex-start; margin: 18px 0; }
+  .pos-hero__icon { display: none; }
+  .pos-hero .eyebrow { font-size: 10px; }
+  .pos-hero h1 { font-size: 22px; }
+  .pos-hero p:last-child { font-size: 12px; }
+  .pos-hero__badge { max-width: 105px; white-space: normal; text-align: center; }
 }

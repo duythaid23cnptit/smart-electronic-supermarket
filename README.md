@@ -1,12 +1,26 @@
-# Smart Electronic Supermarket — TV4 Week 2
+# Smart Electronic Supermarket — TV4 delivery workspace
 
-## Assignment
+## Current demo scope
+
+The final TV4 demo is intentionally limited to two parts:
+
+1. **Module 1 — Kho QR Code & Serial/IMEI** (`/inventory.html`).
+2. **Module 2 — POS bán hàng tại quầy** (`/`).
+
+The Week 2 naming below is retained as historical assignment evidence; it is
+not the current module numbering. See `docs/w6-demo-finalization/` for the W6
+audit, test evidence, risks, demo guide and handover package.
+
+## Week 2 baseline (historical)
 
 **Role:** TV4 — Fullstack Developer  
 **Week 2 task:** Initialize the Git repository and build the React/Spring Boot project skeleton for **Module 1 — POS**.  
 **Deliverable:** Source Code Skeleton Module 1.
 
-This repository intentionally implements only the technical skeleton required for Week 2. It does **not** claim that the POS business workflow is complete.
+The following section records the original Week 2 baseline. Later sections
+describe the additive QR, inventory and W5 POS demo work. The repository still
+does **not** claim that the full supermarket or approved POS business workflow
+is complete.
 
 ## Scope implemented
 
@@ -20,7 +34,7 @@ This repository intentionally implements only the technical skeleton required fo
 - Axios API layer.
 - Documentation and evidence checklist.
 
-## Explicitly not implemented
+## Explicitly not implemented in the Week 2 baseline
 
 - Final POS sales workflow.
 - Payment processing.
@@ -144,3 +158,64 @@ git diff
 ## Evidence
 
 See `docs/TV4_WEEK2_REPORT.md` and `docs/EVIDENCE_CHECKLIST.md`.
+
+## QR Scanner PoC (TV4 - W1)
+
+The isolated mobile QR scanner experiment is available at `/qr-poc.html` and does not
+change the existing POS or backend APIs.
+
+```powershell
+cd frontend
+npm run generate:qr-samples
+npm run test:qr
+npm run dev:qr:https
+```
+
+See `docs/qr-poc/README.md` for mobile HTTPS setup, test cases and the rule for recording
+only measurements observed on a real phone.
+
+## Inventory QR Receiving Demo (TV4 - Week 3)
+
+Week 3 adds an isolated inventory receiving page and Spring Boot REST API without changing
+the existing POS endpoints. Run the backend with the file-based H2 demo profile:
+
+```powershell
+cd backend
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=demo"
+```
+
+In another terminal:
+
+```powershell
+cd frontend
+npm run dev:inventory
+```
+
+Open `http://localhost:5173/inventory.html`. For a phone camera test, use
+`npm run dev:inventory:https` or a trusted HTTPS tunnel. Demo purchase orders are
+`PO-DEMO-APPROVED` and `PO-DEMO-DRAFT`.
+
+See `docs/inventory-qr/README.md` for API, test and handoff details.
+
+## POS checkout demo (TV4 - Week 5)
+
+Week 5 connects the POS page to the real W3/W4 `Product` and `ProductUnit`
+records. Only `GOOD` + `AVAILABLE` units can be selected. A successful
+`DEMO_CASH` checkout stores the sale and receipt and changes the same unit to
+`SOLD` in one database transaction.
+
+```powershell
+cd backend
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=demo"
+
+# In another terminal
+cd frontend
+npm run dev
+```
+
+Open `http://localhost:5173`. Demo prices live only in
+`application-demo.properties`; BA/PM approval is still required before these
+values or this simulated payment flow can be used outside the demo.
+
+See `docs/pos-w5/README.md` and `docs/pos-w5/W5_RELEASE_REPORT.md` for the API,
+PC demo procedure, actual test evidence and outstanding approvals.
