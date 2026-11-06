@@ -1,0 +1,185 @@
+html { scrollbar-gutter: stable; }
+
+.sasms-design-root {
+  --sasms-color-brand: #173b78;
+  --sasms-color-inventory: #2563eb;
+  --sasms-color-pos: #0f766e;
+  --sasms-color-canvas: #eaf1fa;
+  --sasms-color-surface: #ffffff;
+  --sasms-color-surface-subtle: #f8fafc;
+  --sasms-color-text: #172238;
+  --sasms-color-text-muted: #53657d;
+  --sasms-color-border: #d6e0ec;
+  --sasms-color-disabled-text: #5d6a7d;
+  --sasms-color-disabled-surface: #e8edf4;
+  --sasms-color-primary: var(--sasms-color-brand);
+  --sasms-color-primary-strong: #102f64;
+  --sasms-color-primary-soft: #eaf0fa;
+  --sasms-color-success: #16784a;
+  --sasms-color-warning: #9a5b06;
+  --sasms-color-danger: #b4232e;
+  --sasms-focus-ring: #f59e0b;
+  --sasms-space-1: 4px;
+  --sasms-space-2: 8px;
+  --sasms-space-3: 12px;
+  --sasms-space-4: 16px;
+  --sasms-space-5: 24px;
+  --sasms-space-6: 32px;
+  --sasms-radius-sm: 8px;
+  --sasms-radius-md: 12px;
+  --sasms-radius-lg: 18px;
+  --sasms-shadow-sm: 0 5px 22px rgba(21, 44, 80, .055);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+.sasms-ui-surface {
+  border: 1px solid var(--sasms-color-border);
+  border-radius: var(--sasms-radius-lg);
+  color: var(--sasms-color-text);
+  background: var(--sasms-color-surface);
+  box-shadow: var(--sasms-shadow-sm);
+}
+
+.sasms-ui-button,
+.sasms-ui-input,
+.sasms-ui-select {
+  min-height: 44px;
+  border: 1px solid var(--sasms-color-border);
+  border-radius: var(--sasms-radius-md);
+  padding: 10px 14px;
+  color: var(--sasms-color-text);
+  background: var(--sasms-color-surface);
+  font: inherit;
+}
+
+.sasms-ui-button {
+  border-color: var(--sasms-color-primary);
+  color: #ffffff;
+  background: var(--sasms-color-primary);
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.sasms-ui-button:hover { background: var(--sasms-color-primary-strong); }
+.sasms-ui-button:disabled {
+  border-color: var(--sasms-color-border);
+  color: var(--sasms-color-disabled-text);
+  background: var(--sasms-color-disabled-surface);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.sasms-ui-button:focus-visible,
+.sasms-ui-input:focus-visible,
+.sasms-ui-select:focus-visible,
+.sasms-module-nav a:focus-visible {
+  outline: 3px solid var(--sasms-focus-ring);
+  outline-offset: 3px;
+}
+
+.sasms-design-root.sasms-module-shell { padding-top: 20px; }
+
+.sasms-module-nav,
+.sasms-module-nav * { box-sizing: border-box; }
+
+.sasms-module-nav {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: var(--sasms-space-3) var(--sasms-space-5);
+  align-items: center;
+  position: relative;
+  left: 50%;
+  width: min(1374px, calc(100vw - 32px));
+  min-height: 76px;
+  margin-bottom: 18px;
+  border: 1px solid var(--sasms-color-border);
+  border-radius: var(--sasms-radius-lg);
+  padding: 12px 22px;
+  color: var(--sasms-color-text);
+  background: var(--sasms-color-surface);
+  box-shadow: var(--sasms-shadow-sm);
+  transform: translateX(-50%);
+}
+
+.sasms-module-nav__brand {
+  display: inline-flex;
+  gap: var(--sasms-space-3);
+  align-items: center;
+  min-height: 45px;
+  width: fit-content;
+  color: inherit;
+  text-decoration: none;
+}
+
+.sasms-module-nav__brand > span:last-child { display: grid; }
+.sasms-module-nav__brand strong { font-size: 18px; line-height: 1.2; }
+.sasms-module-nav__brand small { margin-top: 2px; color: var(--sasms-color-text-muted); font-size: 12px; line-height: 1.25; }
+
+.sasms-module-nav__mark {
+  display: inline-grid;
+  width: 45px;
+  height: 45px;
+  flex: 0 0 45px;
+  place-items: center;
+  border-radius: 12px;
+  color: #ffffff;
+  background: var(--sasms-color-brand);
+  font-size: 23px;
+  font-weight: 850;
+}
+
+.sasms-module-nav__links {
+  display: inline-flex;
+  gap: var(--sasms-space-1);
+  border-radius: var(--sasms-radius-md);
+  padding: var(--sasms-space-1);
+  background: var(--sasms-color-surface-subtle);
+}
+
+.sasms-module-nav__link {
+  display: inline-flex;
+  width: 106px;
+  height: 40px;
+  min-width: 106px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--sasms-radius-sm);
+  padding: 0 16px;
+  color: var(--sasms-color-text-muted);
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1;
+}
+
+.sasms-module-nav__link:hover { color: var(--sasms-color-primary-strong); background: var(--sasms-color-primary-soft); }
+.sasms-module-nav__link.is-active { color: #ffffff; background: var(--sasms-color-primary); }
+.sasms-module-nav__link[aria-disabled="true"] {
+  color: var(--sasms-color-disabled-text);
+  background: var(--sasms-color-disabled-surface);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.sasms-module-nav__status {
+  grid-column: 1 / -1;
+  min-height: 0;
+  margin: 0;
+  color: var(--sasms-color-warning);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.sasms-module-nav__status:empty { display: none; }
+
+@media (max-width: 640px) {
+  .sasms-module-nav { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 12px; }
+  .sasms-module-nav__brand { min-width: 0; }
+  .sasms-module-nav__brand small { display: none; }
+  .sasms-module-nav__brand strong { font-size: 15px; }
+  .sasms-module-nav__mark { width: 36px; height: 36px; flex-basis: 36px; border-radius: 10px; font-size: 19px; }
+  .sasms-module-nav__links { display: grid; grid-template-columns: repeat(2, 65px); }
+  .sasms-module-nav__link { width: 65px; min-width: 65px; }
+}

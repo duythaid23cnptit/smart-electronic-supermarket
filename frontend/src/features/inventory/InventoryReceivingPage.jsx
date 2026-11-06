@@ -8,12 +8,24 @@ import {
   summarizeDurations,
 } from '../../poc/qr-scanner/scanUtils.js'
 import { describeCameraError } from '../../poc/qr-scanner/cameraErrors.js'
+import ModuleNav from '../../shared/components/ModuleNav.jsx'
 import { createGoodsReceipt, getPurchaseOrder } from './inventoryApi.js'
 import { addInventoryItem, newIdempotencyKey, validateQrImageFile } from './inventoryUtils.js'
 
 const IMAGE_BENCHMARK_RUNS = 20
 const BENCHMARK_SAMPLE = '/qr-samples/01-leading-zeroes.png'
 const BENCHMARK_EXPECTED_VALUE = '00001234567890'
+const SCANNER_STATE_LABELS = {
+  IDLE: 'Sẵn sàng',
+  REQUESTING_PERMISSION: 'Đang xin quyền camera',
+  SCANNING: 'Đang quét camera',
+  STOPPED: 'Đã dừng camera',
+  ERROR: 'Có lỗi',
+  DECODING_IMAGE: 'Đang đọc ảnh',
+  IMAGE_DECODED: 'Đã đọc ảnh',
+  BENCHMARKING_IMAGE: 'Đang benchmark',
+  BENCHMARK_COMPLETE: 'Benchmark hoàn tất',
+}
 
 function apiMessage(error) {
   return error?.response?.data?.message ?? error?.message ?? 'Không thể kết nối backend.'
@@ -23,11 +35,21 @@ function formatMs(value) {
   return `${value.toFixed(1)} ms`
 }
 
+function formatDateTime(value) {
+  if (!value) return 'Không có dữ liệu'
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return value
+  return new Intl.DateTimeFormat('vi-VN', {
+    dateStyle: 'medium',
+    timeStyle: 'medium',
+  }).format(parsed)
+}
+
 export default function InventoryReceivingPage() {
-  const [orderNumber, setOrderNumber] = useState('PO-DEMO-APPROVED')
+  const [orderNumber, setOrderNumber] = useState('')
   const [order, setOrder] = useState(null)
   const [sku, setSku] = useState('')
-  const [serialImei, setSerialImei] = useState('00001234567890')
+  const [serialImei, setSerialImei] = useState('')
   const [condition, setCondition] = useState('GOOD')
   const [items, setItems] = useState([])
   const [orderLoading, setOrderLoading] = useState(false)
@@ -40,6 +62,7 @@ export default function InventoryReceivingPage() {
   const [benchmark, setBenchmark] = useState(null)
   const [apiRequestMs, setApiRequestMs] = useState(null)
   const [idempotencyKey, setIdempotencyKey] = useState(() => newIdempotencyKey())
+  const [submissionOutcomeUncertain, setSubmissionOutcomeUncertain] = useState(false)
 
   const scannerRef = useRef(null)
   const duplicateGuardRef = useRef(createDuplicateGuard())
@@ -48,11 +71,13 @@ export default function InventoryReceivingPage() {
   const cameraStartedAtRef = useRef(null)
   const mountedRef = useRef(true)
   const autoBenchmarkStartedRef = useRef(false)
+  const serialInputRef = useRef(null)
 
   const invalidateSubmission = useCallback(() => {
     setIdempotencyKey(newIdempotencyKey())
     setReceipt(null)
     setApiRequestMs(null)
+    setSubmissionOutcomeUncertain(false)
   }, [])
 
   const clearScanner = useCallback(async () => {
@@ -100,8 +125,15 @@ export default function InventoryReceivingPage() {
     }
   }, [stopCamera])
 
-  async function loadOrder() {
+  async function loadOrder(event) {
+    event?.preventDefault()
     if (orderLoading || submitting) return
+    if (items.length > 0 && !receipt && !window.confirm(
+      'Danh sách chờ nhập hiện chưa được lưu. Tải PO khác sẽ xóa danh sách này. Bạn vẫn muốn tiếp tục?',
+    )) {
+      setMessage({ type: 'info', text: 'Đã giữ nguyên PO và danh sách chờ nhập hiện tại.' })
+      return
+    }
     setOrderLoading(true)
     setMessage(null)
     try {
@@ -267,6 +299,8 @@ export default function InventoryReceivingPage() {
       setSerialImei('')
       duplicateGuardRef.current.reset()
       invalidateSubmission()
+      setMessage({ type: 'success', text: `Đã thêm Serial/IMEI ${serialImei} vào danh sách chờ nhập.` })
+      window.requestAnimationFrame(() => serialInputRef.current?.focus())
     } catch (error) {
       setMessage({ type: 'error', text: error.message })
     }
@@ -279,9 +313,13 @@ export default function InventoryReceivingPage() {
 
   async function submitReceipt() {
     if (!submitOperationRef.current.tryStart('submit-receipt')) return
+    if (receipt) {
+      submitOperationRef.current.finish('submit-receipt')
+      return
+    }
     if (!order || items.length === 0) {
       submitOperationRef.current.finish('submit-receipt')
-      setMessage({ type: 'error', text: 'Hãy tải purchase order và thêm ít nhất một Serial/IMEI.' })
+      setMessage({ type: 'error', text: 'Hãy tải đơn mua hàng (PO) và thêm ít nhất một Serial/IMEI.' })
       return
     }
     setSubmitting(true)
@@ -294,11 +332,13 @@ export default function InventoryReceivingPage() {
         items,
       })
       setReceipt(data)
+      setSubmissionOutcomeUncertain(false)
       setMessage({
         type: 'success',
         text: data.replayed ? 'Yêu cầu lặp: backend trả lại phiếu đã tạo.' : 'Nhập kho thành công.',
       })
     } catch (error) {
+      setSubmissionOutcomeUncertain(!error?.response)
       setMessage({ type: 'error', text: apiMessage(error) })
     } finally {
       setApiRequestMs(performance.now() - startedAt)
@@ -307,76 +347,309 @@ export default function InventoryReceivingPage() {
     }
   }
 
+  async function startNewReceipt() {
+    if (submitting || orderLoading) return
+    await stopCamera(false)
+    const currentOrderNumber = order?.orderNumber ?? orderNumber
+    setItems([])
+    setSerialImei('')
+    duplicateGuardRef.current.reset()
+    invalidateSubmission()
+    setMessage(null)
+
+    if (!currentOrderNumber) {
+      setOrder(null)
+      setSku('')
+      window.requestAnimationFrame(() => serialInputRef.current?.focus())
+      return
+    }
+
+    setOrderLoading(true)
+    try {
+      const data = await getPurchaseOrder(currentOrderNumber)
+      setOrder(data)
+      setOrderNumber(data.orderNumber)
+      setSku(data.lines[0]?.sku ?? '')
+      setMessage({ type: 'info', text: 'Đã bắt đầu phiếu mới và cập nhật lại số lượng còn nhận của PO.' })
+    } catch (error) {
+      setOrder(null)
+      setSku('')
+      setMessage({ type: 'error', text: apiMessage(error) })
+    } finally {
+      setOrderLoading(false)
+      window.requestAnimationFrame(() => serialInputRef.current?.focus())
+    }
+  }
+
   const scannerBusy = cameraState === 'REQUESTING_PERMISSION'
     || cameraState === 'SCANNING'
     || cameraState === 'DECODING_IMAGE'
     || cameraState === 'BENCHMARKING_IMAGE'
+  const goodCount = items.filter((item) => item.condition === 'GOOD').length
+  const defectiveCount = items.length - goodCount
+  const orderApproved = order?.status === 'APPROVED'
 
   return (
-    <main className="inventory-page">
+    <main className="sasms-design-root sasms-module-shell inventory-page">
+      <ModuleNav
+        activeModule="inventory"
+        hasUnsavedWork={items.length > 0 && !receipt}
+        hasPendingOutcome={submissionOutcomeUncertain}
+        isBusy={orderLoading || submitting}
+      />
       <header className="inventory-hero">
-        <p className="inventory-kicker">SASMS · MODULE 1 · W6 DEMO</p>
-        <h1>Module 1 — Kho QR Code &amp; Serial/IMEI</h1>
-        <p>Nhập kho theo purchase order đã duyệt. Serial/IMEI luôn được giữ dưới dạng chuỗi.</p>
+        <div className="inventory-hero-title">
+          <span className="inventory-hero-icon" aria-hidden="true">▣</span>
+          <div>
+            <p className="inventory-kicker">MODULE 1 · KHO</p>
+            <h1>Kho — Nhập thiết bị</h1>
+            <p>Nhận hàng theo đơn mua đã duyệt, quản lý chính xác từng Serial/IMEI.</p>
+          </div>
+        </div>
+        <div className="inventory-workflow" aria-label="Quy trình nhập kho">
+          <span>PO</span><span aria-hidden="true">→</span><span>SKU</span><span aria-hidden="true">→</span>
+          <span>Serial/QR</span><span aria-hidden="true">→</span><span>Phiếu nhập kho</span>
+        </div>
       </header>
-      {message && <div className={`notice ${message.type}`} role="status">{message.text}</div>}
+      {message && (
+        <div className={`inventory-notice ${message.type}`} role={message.type === 'error' ? 'alert' : 'status'}>
+          {message.text}
+        </div>
+      )}
+
+      <div className="inventory-v3-layout">
+        <div className="inventory-v3-main">
+
       <section className="inventory-card">
-        <div className="step-heading"><span>01</span><h2>Tải purchase order</h2></div>
-        <div className="inline-form">
-          <label><span>Mã PO</span><input value={orderNumber} onChange={(event) => setOrderNumber(event.target.value)} /></label>
-          <button type="button" onClick={loadOrder} disabled={orderLoading || submitting}>{orderLoading ? 'Đang tải…' : 'Tải đơn'}</button>
+        <div className="inventory-section-heading">
+          <span className="inventory-step">01</span>
+          <div><h2>Chọn đơn mua hàng</h2><p>Tải đơn để kiểm tra trạng thái duyệt và số lượng còn nhận.</p></div>
         </div>
-        {order && <div className="order-summary">
-          <strong>{order.orderNumber}</strong>
-          <span className={order.status === 'APPROVED' ? 'approved' : 'draft'}>{order.status}</span>
-          <span>{order.warehouseCode} · {order.warehouseName}</span>
-          <ul>{order.lines.map((line) => <li key={line.sku}>{line.sku}: còn {line.remainingQuantity}/{line.approvedQuantity}</li>)}</ul>
-        </div>}
-      </section>
-      <section className="inventory-card">
-        <div className="step-heading"><span>02</span><h2>Quét hoặc nhập Serial/IMEI</h2></div>
-        <div className="camera-actions">
-          <button type="button" onClick={startCamera} disabled={scannerBusy}>Bật camera</button>
-          <button className="button-muted" type="button" onClick={() => stopCamera()} disabled={!scannerBusy || cameraState === 'DECODING_IMAGE' || cameraState === 'BENCHMARKING_IMAGE'}>Dừng camera</button>
-          <label className="file-button"><span>Chọn ảnh QR</span><input type="file" accept="image/png,image/jpeg" onChange={selectQrImage} disabled={scannerBusy} /></label>
-          <small>Scanner: {cameraState}</small>
-        </div>
-        <p className="scanner-help">Ảnh PNG/JPG tối đa 5 MB được giải mã ngay trong trình duyệt và không được tải lên server.</p>
-        <div id="inventory-qr-reader" className="inventory-reader" />
-        <div className="measurement-grid" aria-live="polite">
-          <span>CAMERA_SCAN_LATENCY: {cameraLatencyMs === null ? 'NOT RUN' : formatMs(cameraLatencyMs)}</span>
-          <span>IMAGE_FILE_DECODE: {imageMeasurement === null ? 'NOT RUN' : formatMs(imageMeasurement.elapsedMs)}</span>
-          <span>API_REQUEST_MS: {apiRequestMs === null ? 'NOT RUN' : formatMs(apiRequestMs)}</span>
-        </div>
-        <div className="benchmark-panel">
-          <button className="button-muted" type="button" onClick={runImageBenchmark} disabled={scannerBusy}>Benchmark ảnh mẫu ×20</button>
-          {benchmark?.summary && <span data-testid="benchmark-summary">n={benchmark.summary.n}; mean={formatMs(benchmark.summary.mean)}; median={formatMs(benchmark.summary.median)}; p95={formatMs(benchmark.summary.p95)}; min={formatMs(benchmark.summary.min)}; max={formatMs(benchmark.summary.max)}; fail={benchmark.failCount}</span>}
-          {benchmark && !benchmark.summary && <span data-testid="benchmark-summary">n=0; fail={benchmark.failCount}</span>}
-        </div>
-        <form className="item-form" onSubmit={addItem}>
-          <label><span>SKU</span><select value={sku} onChange={(event) => setSku(event.target.value)} disabled={!order}>
-            <option value="">Chọn SKU</option>
-            {order?.lines.map((line) => <option key={line.sku} value={line.sku}>{line.sku} — {line.productName}</option>)}
-          </select></label>
-          <label className="serial-field"><span>Serial/IMEI chính xác</span><input value={serialImei} onChange={(event) => setSerialImei(event.target.value)} /></label>
-          <label><span>Tình trạng</span><select value={condition} onChange={(event) => setCondition(event.target.value)}>
-            <option value="GOOD">GOOD — vào tồn khả dụng</option>
-            <option value="DEFECTIVE">DEFECTIVE — không vào tồn khả dụng</option>
-          </select></label>
-          <button type="submit" disabled={!order || !sku}>Thêm mã</button>
+        <form className="inventory-po-form" onSubmit={loadOrder}>
+          <label className="inventory-field" htmlFor="inventory-po-number">
+            <span>Mã đơn mua (PO)</span>
+            <input
+              id="inventory-po-number"
+              value={orderNumber}
+              maxLength={80}
+              onChange={(event) => setOrderNumber(event.target.value)}
+              placeholder="Nhập mã PO"
+              autoComplete="off"
+            />
+          </label>
+          <button className="inventory-action inventory-action-primary" type="submit" disabled={orderLoading || submitting || !orderNumber.trim()}>
+            {orderLoading ? 'Đang tải…' : 'Tải đơn'}
+          </button>
         </form>
+
+        {order ? (
+          <div className="inventory-order-summary">
+            <div className="inventory-order-header">
+              <div><span>Đơn mua hàng</span><strong>{order.orderNumber}</strong></div>
+              <div><span>Kho nhận</span><strong>{order.warehouseCode} · {order.warehouseName}</strong></div>
+              <span className={`inventory-status-badge ${orderApproved ? 'is-approved' : 'is-draft'}`}>{order.status}</span>
+            </div>
+            {!orderApproved && <p className="inventory-inline-warning">PO chưa được duyệt. Hệ thống không cho phép tạo phiếu nhập kho.</p>}
+            <div className="inventory-table-wrap">
+              <table className="inventory-table">
+                <thead><tr><th>SKU</th><th>Sản phẩm</th><th className="is-number">Được duyệt</th><th className="is-number">Đã nhận</th><th className="is-number">Còn lại</th></tr></thead>
+                <tbody>{order.lines.map((line) => (
+                  <tr key={line.sku}>
+                    <td><strong>{line.sku}</strong></td><td>{line.productName}</td>
+                    <td className="is-number">{line.approvedQuantity}</td><td className="is-number">{line.receivedQuantity}</td>
+                    <td className="is-number"><strong>{line.remainingQuantity}</strong></td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <div className="inventory-empty-state"><strong>Chưa tải đơn mua hàng</strong><span>Nhập mã PO rồi nhấn Enter hoặc chọn “Tải đơn”.</span></div>
+        )}
       </section>
+
       <section className="inventory-card">
-        <div className="step-heading"><span>03</span><h2>Xác nhận phiếu nhập</h2></div>
-        {items.length === 0 ? <p className="empty">Chưa có Serial/IMEI.</p> : <div className="unit-list">{items.map((item, index) => <article key={`${item.serialImei}-${index}`}>
-          <div><strong>{item.serialImei}</strong><small>{item.sku} · {item.condition}</small></div>
-          <button className="button-danger" type="button" onClick={() => removeItem(index)} disabled={submitting}>Xóa</button>
-        </article>)}</div>}
-        <button className="submit-receipt" type="button" onClick={submitReceipt} disabled={submitting || items.length === 0}>{submitting ? 'Đang xử lý…' : 'Tạo Goods Receipt'}</button>
-        {receipt && <div className="receipt-result">
-          <strong>{receipt.receiptNumber}</strong><span>Khả dụng: {receipt.availableQuantity}</span><span>Hàng lỗi: {receipt.defectiveQuantity}</span><span>Idempotent replay: {receipt.replayed ? 'YES' : 'NO'}</span>
-        </div>}
+        <div className="inventory-section-heading">
+          <span className="inventory-step">02</span>
+          <div><h2>Nhập thiết bị</h2><p>Chọn SKU, nhập hoặc quét Serial/IMEI, sau đó xác nhận tình trạng thực nhận.</p></div>
+        </div>
+        <div className="inventory-entry-layout">
+          <form className="inventory-item-form" onSubmit={addItem}>
+            <label className="inventory-field" htmlFor="inventory-sku">
+              <span>SKU</span>
+              <select id="inventory-sku" value={sku} onChange={(event) => setSku(event.target.value)} disabled={!orderApproved || Boolean(receipt)}>
+                <option value="">Chọn SKU</option>
+                {order?.lines.map((line) => <option key={line.sku} value={line.sku}>{line.sku} — {line.productName}</option>)}
+              </select>
+            </label>
+            <label className="inventory-field inventory-serial-field" htmlFor="inventory-serial">
+              <span>Serial/IMEI</span>
+              <input
+                ref={serialInputRef}
+                id="inventory-serial"
+                value={serialImei}
+                maxLength={160}
+                required
+                autoComplete="off"
+                spellCheck="false"
+                onChange={(event) => setSerialImei(event.target.value)}
+                disabled={!orderApproved || Boolean(receipt)}
+                placeholder="Nhập chính xác chuỗi Serial/IMEI"
+              />
+              <small>Giữ nguyên số 0 đầu; không tự mở chuỗi URL.</small>
+            </label>
+            <label className="inventory-field" htmlFor="inventory-condition">
+              <span>Tình trạng</span>
+              <select id="inventory-condition" value={condition} onChange={(event) => setCondition(event.target.value)} disabled={!orderApproved || Boolean(receipt)}>
+                <option value="GOOD">GOOD — vào tồn khả dụng</option>
+                <option value="DEFECTIVE">DEFECTIVE — không vào tồn khả dụng</option>
+              </select>
+            </label>
+            <button className="inventory-action inventory-action-primary inventory-add-action" type="submit" disabled={!orderApproved || !sku || !serialImei || Boolean(receipt)}>
+              Thêm vào danh sách
+            </button>
+          </form>
+
+          <aside className="inventory-scan-panel" aria-label="Quét QR">
+            <div className="inventory-scan-header"><div><strong>Quét QR</strong><span>Camera hoặc ảnh cục bộ</span></div><span className="inventory-scanner-state">{SCANNER_STATE_LABELS[cameraState] ?? cameraState}</span></div>
+            <div className="inventory-camera-actions">
+              <button className="inventory-action inventory-action-secondary" type="button" onClick={startCamera} disabled={scannerBusy || !orderApproved || Boolean(receipt)}>Bật camera</button>
+              <button className="inventory-action inventory-action-quiet" type="button" onClick={() => stopCamera()} disabled={!scannerBusy || cameraState === 'DECODING_IMAGE' || cameraState === 'BENCHMARKING_IMAGE'}>Dừng</button>
+              <label className={`inventory-file-button${scannerBusy || !orderApproved || receipt ? ' is-disabled' : ''}`}>
+                <span>Chọn ảnh QR</span>
+                <input type="file" accept="image/png,image/jpeg" onChange={selectQrImage} disabled={scannerBusy || !orderApproved || Boolean(receipt)} />
+              </label>
+            </div>
+            <p>Ảnh PNG/JPG tối đa 5 MB, được giải mã trong trình duyệt và không tải lên server.</p>
+          </aside>
+        </div>
+
+        {!order && <p className="inventory-disabled-help">Hãy tải một PO đã duyệt để bật chức năng nhập hoặc quét thiết bị.</p>}
+        {order && !orderApproved && <p className="inventory-disabled-help is-warning">Các điều khiển nhập thiết bị đang khóa vì PO ở trạng thái {order.status}.</p>}
+        {receipt && <p className="inventory-disabled-help is-success">Phiếu đã được lưu. Chọn “Bắt đầu phiếu mới” để tiếp tục nhập thiết bị.</p>}
+
+        <div id="inventory-qr-reader" className="inventory-reader" />
+        <details className="inventory-technical-panel">
+          <summary>Thông tin kỹ thuật và benchmark QR</summary>
+          <div className="inventory-measurement-grid" aria-live="polite">
+            <span>CAMERA_SCAN_LATENCY: {cameraLatencyMs === null ? 'NOT RUN' : formatMs(cameraLatencyMs)}</span>
+            <span>IMAGE_FILE_DECODE: {imageMeasurement === null ? 'NOT RUN' : formatMs(imageMeasurement.elapsedMs)}</span>
+            <span>API_REQUEST_MS: {apiRequestMs === null ? 'NOT RUN' : formatMs(apiRequestMs)}</span>
+          </div>
+          <div className="inventory-benchmark-panel">
+            <button className="inventory-action inventory-action-quiet" type="button" onClick={runImageBenchmark} disabled={scannerBusy}>Benchmark ảnh mẫu ×20</button>
+            {benchmark?.summary && <span data-testid="benchmark-summary">n={benchmark.summary.n}; mean={formatMs(benchmark.summary.mean)}; median={formatMs(benchmark.summary.median)}; p95={formatMs(benchmark.summary.p95)}; min={formatMs(benchmark.summary.min)}; max={formatMs(benchmark.summary.max)}; fail={benchmark.failCount}</span>}
+            {benchmark && !benchmark.summary && <span data-testid="benchmark-summary">n=0; fail={benchmark.failCount}</span>}
+          </div>
+        </details>
       </section>
+
+      <section className="inventory-card">
+        <div className="inventory-section-heading inventory-section-heading-split">
+          <div className="inventory-section-title"><span className="inventory-step">03</span><div><h2>Danh sách chờ nhập</h2><p>{receipt ? 'Danh sách đã được lưu, không thể gửi lại.' : 'Kiểm tra thiết bị trước khi tạo phiếu nhập kho.'}</p></div></div>
+          <span className={`inventory-state-label ${receipt ? 'is-saved' : 'is-pending'}`}>{receipt ? 'ĐÃ LƯU' : 'BẢN NHÁP'}</span>
+        </div>
+
+        <div className="inventory-counts" aria-label="Tổng hợp danh sách chờ nhập">
+          <div><span>Tổng thiết bị</span><strong>{items.length}</strong></div>
+          <div><span>GOOD</span><strong>{goodCount}</strong></div>
+          <div><span>DEFECTIVE</span><strong>{defectiveCount}</strong></div>
+        </div>
+
+        {items.length === 0 ? (
+          <div className="inventory-empty-state"><strong>Danh sách đang trống</strong><span>Thêm ít nhất một Serial/IMEI từ khu vực nhập thiết bị.</span></div>
+        ) : (
+          <div className="inventory-table-wrap inventory-draft-table-wrap">
+            <table className="inventory-table inventory-unit-table">
+              <thead><tr><th>SKU</th><th>Serial/IMEI</th><th>Tình trạng</th><th aria-label="Thao tác" /></tr></thead>
+              <tbody>{items.map((item, index) => (
+                <tr key={`${item.serialImei}-${index}`}>
+                  <td><strong>{item.sku}</strong></td>
+                  <td className="inventory-serial-value">{item.serialImei}</td>
+                  <td><span className={`inventory-condition is-${item.condition.toLowerCase()}`}>{item.condition}</span></td>
+                  <td className="inventory-row-action"><button className="inventory-action inventory-action-danger" type="button" onClick={() => removeItem(index)} disabled={submitting || Boolean(receipt)}>Xóa</button></td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        )}
+
+        {!receipt && (
+          <div className="inventory-submit-bar">
+            <div><strong>Tạo phiếu nhập kho</strong><span>Backend sẽ kiểm tra lại PO, số lượng và Serial/IMEI.</span></div>
+            <button className="inventory-action inventory-action-success" type="button" onClick={submitReceipt} disabled={submitting || items.length === 0 || !orderApproved}>
+              {submitting ? 'Đang xử lý…' : 'Tạo phiếu nhập kho'}
+            </button>
+          </div>
+        )}
+      </section>
+        </div>
+
+        <aside className="inventory-v3-sidebar">
+          <section className="inventory-card inventory-po-details" aria-labelledby="inventory-po-details-title">
+            <div className="inventory-sidebar-heading">
+              <h2 id="inventory-po-details-title">Thông tin PO</h2>
+              {order && <span className={`inventory-status-badge ${orderApproved ? 'is-approved' : 'is-draft'}`}>{order.status}</span>}
+            </div>
+            {order ? (
+              <>
+                <dl className="inventory-po-meta">
+                  <div><dt>Mã PO</dt><dd>{order.orderNumber}</dd></div>
+                  <div><dt>Kho nhận</dt><dd>{order.warehouseCode} · {order.warehouseName}</dd></div>
+                  <div><dt>Số SKU</dt><dd>{order.lines.length}</dd></div>
+                </dl>
+                {!orderApproved && <p className="inventory-inline-warning">PO chưa được duyệt. Hệ thống không cho phép tạo phiếu nhập kho.</p>}
+                <div className="inventory-table-wrap inventory-po-table-wrap">
+                  <table className="inventory-table">
+                    <thead><tr><th>SKU</th><th className="is-number">Duyệt</th><th className="is-number">Đã nhận</th><th className="is-number">Còn lại</th></tr></thead>
+                    <tbody>{order.lines.map((line) => (
+                      <tr key={line.sku}><td><strong>{line.sku}</strong></td><td className="is-number">{line.approvedQuantity}</td><td className="is-number">{line.receivedQuantity}</td><td className="is-number"><strong>{line.remainingQuantity}</strong></td></tr>
+                    ))}</tbody>
+                  </table>
+                </div>
+              </>
+            ) : (
+              <div className="inventory-empty-state"><strong>Chưa có thông tin PO</strong><span>Tải một đơn mua hàng để xem kho nhận và hạn mức SKU.</span></div>
+            )}
+          </section>
+
+          {!receipt && (
+            <section className="inventory-card inventory-receipt-placeholder" aria-labelledby="inventory-receipt-placeholder-title">
+              <div className="inventory-sidebar-heading"><h2 id="inventory-receipt-placeholder-title">Phiếu nhập kho</h2></div>
+              <div className="inventory-empty-state inventory-receipt-empty"><span className="inventory-receipt-empty-icon" aria-hidden="true">▤</span><strong>Chưa có phiếu nhập</strong><span>Sau khi lưu thành công, mã phiếu và kết quả thật từ API sẽ hiển thị tại đây.</span></div>
+            </section>
+          )}
+
+      {receipt && (
+        <section className="inventory-card inventory-receipt" aria-labelledby="inventory-receipt-title">
+          <div className="inventory-receipt-heading">
+            <div><span className="inventory-success-mark" aria-hidden="true">✓</span><div><p>Phiếu nhập kho</p><h2 id="inventory-receipt-title">{receipt.receiptNumber}</h2></div></div>
+            <span className="inventory-status-badge is-approved">{receipt.replayed ? 'ĐÃ TỒN TẠI' : 'ĐÃ LƯU'}</span>
+          </div>
+          <dl className="inventory-receipt-meta">
+            <div><dt>Đơn mua hàng (PO)</dt><dd>{receipt.purchaseOrderNumber}</dd></div>
+            <div><dt>Kho nhận</dt><dd>{receipt.warehouseCode}</dd></div>
+            <div><dt>Thời điểm</dt><dd>{formatDateTime(receipt.createdAt)}</dd></div>
+            <div><dt>Khả dụng</dt><dd>{receipt.availableQuantity}</dd></div>
+            <div><dt>Hàng lỗi</dt><dd>{receipt.defectiveQuantity}</dd></div>
+            <div><dt>Yêu cầu lặp</dt><dd>{receipt.replayed ? 'YES' : 'NO'}</dd></div>
+          </dl>
+          <div className="inventory-table-wrap">
+            <table className="inventory-table">
+              <thead><tr><th>SKU</th><th>Serial/IMEI</th><th>Tình trạng nhận</th><th>Trạng thái tồn</th></tr></thead>
+              <tbody>{receipt.items.map((item) => (
+                <tr key={item.serialImei}><td><strong>{item.sku}</strong></td><td className="inventory-serial-value">{item.serialImei}</td><td>{item.condition}</td><td>{item.inventoryStatus}</td></tr>
+              ))}</tbody>
+            </table>
+          </div>
+          <div className="inventory-receipt-actions">
+            <p>Phiếu đã khóa trên giao diện để tránh gửi lại ngoài ý muốn.</p>
+            <button className="inventory-action inventory-action-primary" type="button" onClick={startNewReceipt} disabled={orderLoading || submitting}>{orderLoading ? 'Đang cập nhật PO…' : 'Bắt đầu phiếu mới'}</button>
+          </div>
+        </section>
+      )}
+        </aside>
+      </div>
     </main>
   )
 }
